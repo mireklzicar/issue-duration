@@ -2,6 +2,19 @@
 
 Automatically label issues with their duration and color-code based on configurable thresholds. This GitHub Action helps teams quickly identify how long issues have been open or how long they took to close, improving project management and visibility.
 
+![](issue-duration-preview.png)
+
+## Input Parameters
+
+| Parameter | Description | Required | Default |
+|-----------|-------------|----------|---------|
+| `github-token` | GitHub token for authentication | Yes | N/A |
+| `short_threshold` | Number of days considered short duration | No | '3' |
+| `medium_threshold` | Number of days considered medium duration | No | '10' |
+| `short_color` | Color for short duration labels (hex without #) | No | '00FF00' |
+| `medium_color` | Color for medium duration labels (hex without #) | No | 'FFA500' |
+| `long_color` | Color for long duration labels (hex without #) | No | 'FF0000' |
+
 ## Description
 
 The Issue Duration Labeler action scans all issues in your repository (both open and closed) and adds a color-coded duration label to each. The duration is calculated as follows:
@@ -58,17 +71,6 @@ jobs:
     medium_color: 'FFA500'
     long_color: 'B60205'
 ```
-
-## Input Parameters
-
-| Parameter | Description | Required | Default |
-|-----------|-------------|----------|---------|
-| `github-token` | GitHub token for authentication | Yes | N/A |
-| `short_threshold` | Number of days considered short duration | No | '3' |
-| `medium_threshold` | Number of days considered medium duration | No | '10' |
-| `short_color` | Color for short duration labels (hex without #) | No | '00FF00' |
-| `medium_color` | Color for medium duration labels (hex without #) | No | 'FFA500' |
-| `long_color` | Color for long duration labels (hex without #) | No | 'FF0000' |
 
 ---
 
