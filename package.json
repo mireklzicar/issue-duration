@@ -1,0 +1,16 @@
+{
+  "name": "issue-duration-labeler",
+  "version": "1.0.0",
+  "description": "Automatically label issues with their duration and color-code based on configurable thresholds",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["github", "actions", "issues", "labels"],
+  "author": "Your Name or Organization",
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.10.0",
+    "@actions/github": "^5.1.1"
+  }
+}
