@@ -5,15 +5,14 @@ async function run() {
   try {
     // Configuration
     const config = {
-      shortThreshold: parseInt(core.getInput('short_threshold')),
-      mediumThreshold: parseInt(core.getInput('medium_threshold')),
+      shortThreshold: parseInt(core.getInput('short_threshold')) || 3,
+      mediumThreshold: parseInt(core.getInput('medium_threshold')) || 10,
       colors: {
-        short: core.getInput('short_color'),
-        medium: core.getInput('medium_color'),
-        long: core.getInput('long_color')
+        short: core.getInput('short_color') || '00FF00',
+        medium: core.getInput('medium_color') || 'FFA500',
+        long: core.getInput('long_color') || 'FF0000'
       }
     };
-
     const token = core.getInput('github-token');
     const octokit = github.getOctokit(token);
 
@@ -29,9 +28,9 @@ async function run() {
         const color = getColorForDuration(duration, config);
         const durationLabel = `Duration: ${duration} days`;
 
-        await removeOldDurationLabels(issue);
-        await createOrUpdateLabel(durationLabel, color);
-        await addLabelToIssue(issue, durationLabel);
+        await removeOldDurationLabels(issue, octokit);
+        await createOrUpdateLabel(durationLabel, color, octokit);
+        await addLabelToIssue(issue, durationLabel, octokit);
 
         core.info(`Updated issue #${issue.number} with label: ${durationLabel} (color: ${color})`);
       }
@@ -52,19 +51,23 @@ async function run() {
     }
 
     // Remove old duration labels from an issue
-    async function removeOldDurationLabels(issue) {
+    async function removeOldDurationLabels(issue, octokit) {
       const oldLabels = issue.labels.filter(label => label.name.startsWith('Duration:'));
       for (const label of oldLabels) {
-        await octokit.rest.issues.removeLabel({
-          ...github.context.repo,
-          issue_number: issue.number,
-          name: label.name
-        });
+        try {
+          await octokit.rest.issues.removeLabel({
+            ...github.context.repo,
+            issue_number: issue.number,
+            name: label.name
+          });
+        } catch (error) {
+          core.warning(`Failed to remove old label from issue #${issue.number}: ${error.message}`);
+        }
       }
     }
 
     // Create or update a label
-    async function createOrUpdateLabel(name, color) {
+    async function createOrUpdateLabel(name, color, octokit) {
       try {
         await octokit.rest.issues.createLabel({
           ...github.context.repo,
@@ -73,29 +76,36 @@ async function run() {
         });
       } catch (error) {
         if (error.status === 422) {
-          await octokit.rest.issues.updateLabel({
-            ...github.context.repo,
-            name: name,
-            color: color
-          });
+          try {
+            await octokit.rest.issues.updateLabel({
+              ...github.context.repo,
+              name: name,
+              color: color
+            });
+          } catch (updateError) {
+            core.warning(`Failed to update label: ${updateError.message}`);
+          }
         } else {
-          throw error;
+          core.warning(`Failed to create label: ${error.message}`);
         }
       }
     }
 
     // Add a label to an issue
-    async function addLabelToIssue(issue, label) {
-      await octokit.rest.issues.addLabels({
-        ...github.context.repo,
-        issue_number: issue.number,
-        labels: [label]
-      });
+    async function addLabelToIssue(issue, label, octokit) {
+      try {
+        await octokit.rest.issues.addLabels({
+          ...github.context.repo,
+          issue_number: issue.number,
+          labels: [label]
+        });
+      } catch (error) {
+        core.warning(`Failed to add label to issue #${issue.number}: ${error.message}`);
+      }
     }
 
     // Run the main function
     await processIssues();
-
   } catch (error) {
     core.setFailed(error.message);
   }
