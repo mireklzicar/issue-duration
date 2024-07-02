@@ -1,19 +1,35 @@
-name: Label Issues with Duration
+name: 'Issue Duration Labeler'
+description: 'Automatically label issues with color-coded duration tags, helping teams track issue lifecycle and improve project management.'
+author: 'Mirek Lzicar'
+inputs:
+  github-token:
+    description: 'GitHub token for authentication'
+    required: true
+  short_threshold:
+    description: 'Number of days considered short duration (green label)'
+    required: false
+    default: '3'
+  medium_threshold:
+    description: 'Number of days considered medium duration (orange label)'
+    required: false
+    default: '10'
+  short_color:
+    description: 'Color for short duration labels'
+    required: false
+    default: '00FF00'
+  medium_color:
+    description: 'Color for medium duration labels'
+    required: false
+    default: 'FFA500'
+  long_color:
+    description: 'Color for long duration labels'
+    required: false
+    default: 'FF0000'
 
-on:
-  schedule:
-    - cron: '0 0 * * *'  # Run at midnight every day
-  workflow_dispatch:  # Allow manual triggering
+runs:
+  using: 'node16'
+  main: 'index.js'
 
-jobs:
-  label-issues:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: ./.github/actions/issue-duration-labeler
-        with:
-          short_threshold: '3'
-          medium_threshold: '10'
-          short_color: '00FF00'
-          medium_color: 'FFA500'
-          long_color: 'FF0000'
+branding:
+  icon: 'clock'
+  color: 'blue'
