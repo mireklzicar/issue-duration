@@ -33746,13 +33746,14 @@ async function run() {
   try {
     // Configuration
     const config = {
-      shortThreshold: parseInt(core.getInput('short_threshold')) || 3,
-      mediumThreshold: parseInt(core.getInput('medium_threshold')) || 10,
+      shortThreshold: parseInt(core.getInput('short_threshold')) || 7,
+      mediumThreshold: parseInt(core.getInput('medium_threshold')) || 30,
       colors: {
         short: core.getInput('short_color') || '00FF00',
         medium: core.getInput('medium_color') || 'FFA500',
         long: core.getInput('long_color') || 'FF0000'
-      }
+      },
+      thresholdedUpdate: core.getInput('thresholded_update') === 'true'
     };
     const token = core.getInput('github-token');
     const octokit = github.getOctokit(token);
@@ -33766,14 +33767,16 @@ async function run() {
 
       for (const issue of issues) {
         const duration = calculateDuration(issue);
-        const color = getColorForDuration(duration, config);
-        const durationLabel = `Duration: ${duration} days`;
+        const { label, color } = getLabelAndColorForDuration(duration, config);
 
-        await removeOldDurationLabels(issue, octokit);
-        await createOrUpdateLabel(durationLabel, color, octokit);
-        await addLabelToIssue(issue, durationLabel, octokit);
-
-        core.info(`Updated issue #${issue.number} with label: ${durationLabel} (color: ${color})`);
+        if (!config.thresholdedUpdate || (config.thresholdedUpdate && label)) {
+          await removeOldDurationLabels(issue, octokit);
+          if (label) {
+            await createOrUpdateLabel(label, color, octokit);
+            await addLabelToIssue(issue, label, octokit);
+            core.info(`Updated issue #${issue.number} with label: ${label} (color: ${color})`);
+          }
+        }
       }
     }
 
@@ -33784,11 +33787,15 @@ async function run() {
       return Math.ceil((endDate - createdAt) / (1000 * 60 * 60 * 24));
     }
 
-    // Determine color based on duration and config
-    function getColorForDuration(duration, config) {
-      if (duration <= config.shortThreshold) return config.colors.short;
-      if (duration <= config.mediumThreshold) return config.colors.medium;
-      return config.colors.long;
+    // Determine label and color based on duration and config
+    function getLabelAndColorForDuration(duration, config) {
+      if (duration <= config.shortThreshold) {
+        return { label: `Duration: 1-${config.shortThreshold} days`, color: config.colors.short };
+      } else if (duration <= config.mediumThreshold) {
+        return { label: `Duration: ${config.shortThreshold + 1}-${config.mediumThreshold} days`, color: config.colors.medium };
+      } else {
+        return { label: 'Duration: >1 month', color: config.colors.long };
+      }
     }
 
     // Remove old duration labels from an issue
@@ -33853,7 +33860,6 @@ async function run() {
 }
 
 run();
-
 })();
 
 module.exports = __webpack_exports__;

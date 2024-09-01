@@ -8,11 +8,11 @@ inputs:
   short_threshold:
     description: 'Number of days considered short duration (green label)'
     required: false
-    default: '3'
+    default: '7'
   medium_threshold:
     description: 'Number of days considered medium duration (orange label)'
     required: false
-    default: '10'
+    default: '30'
   short_color:
     description: 'Color for short duration labels'
     required: false
@@ -25,6 +25,10 @@ inputs:
     description: 'Color for long duration labels'
     required: false
     default: 'FF0000'
+  thresholded_update:
+    description: 'Update issue duration only when a threshold is met'
+    required: false
+    default: 'true'
 
 runs:
   using: 'node20'
